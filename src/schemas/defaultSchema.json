@@ -1,0 +1,119 @@
+{
+  "version": "1.0.0",
+  "schemaName": "artisan_product_schema",
+  "description": "Dynamic configuration-driven schema for artisan handicraft and handloom products",
+  "fields": [
+    {
+      "name": "product_name",
+      "type": "string",
+      "required": true,
+      "description": "Name or title of the craft product",
+      "aliases": ["item", "product", "peru", "naam", "bommala peru"],
+      "rules": [
+        { "type": "required", "message": "Product name is required." },
+        { "type": "type", "expectedType": "string" },
+        { "type": "min", "value": 2, "message": "Product name must be at least 2 characters." }
+      ],
+      "normalization": {
+        "trim": true
+      }
+    },
+    {
+      "name": "craft_type",
+      "type": "string",
+      "required": true,
+      "description": "The specific craft discipline or GI tag",
+      "aliases": ["craft", "kala", "shilpam", "hastakala"],
+      "rules": [
+        { "type": "required", "message": "Craft type is required." },
+        { "type": "type", "expectedType": "string" }
+      ],
+      "normalization": {
+        "trim": true
+      }
+    },
+    {
+      "name": "category",
+      "type": "string",
+      "required": true,
+      "description": "Product category",
+      "aliases": ["type", "vargam", "shreni"],
+      "rules": [
+        { "type": "required", "message": "Category is required." },
+        { "type": "type", "expectedType": "string" }
+      ],
+      "normalization": {
+        "trim": true,
+        "lowercase": true
+      }
+    },
+    {
+      "name": "material",
+      "type": "array",
+      "required": true,
+      "description": "Raw materials used in crafting the product",
+      "aliases": ["materials", "dravyam", "padartham", "chekka", "wood", "silk", "cotton"],
+      "rules": [
+        { "type": "required", "message": "At least one material must be specified." },
+        { "type": "type", "expectedType": "array" },
+        { "type": "min", "value": 1, "message": "At least one material is required." }
+      ],
+      "normalization": {
+        "trim": true
+      }
+    },
+    {
+      "name": "price",
+      "type": "number",
+      "required": true,
+      "description": "Unit selling price of the product",
+      "aliases": ["cost", "rate", "dharalu", "vela", "rupees", "khareedu"],
+      "rules": [
+        { "type": "required", "message": "Price is required." },
+        { "type": "type", "expectedType": "number" },
+        { "type": "min", "value": 1, "message": "Price must be greater than zero." }
+      ],
+      "normalization": {
+        "unitType": "currency"
+      }
+    },
+    {
+      "name": "currency",
+      "type": "string",
+      "required": false,
+      "description": "Currency code",
+      "rules": [
+        { "type": "enum", "allowedValues": ["INR", "USD", "EUR"] }
+      ],
+      "normalization": {
+        "trim": true,
+        "lowercase": false
+      }
+    },
+    {
+      "name": "production_time",
+      "type": "string",
+      "required": false,
+      "description": "Duration required to craft one unit",
+      "aliases": ["time", "duration", "rojulu", "din", "kalam", "samayam"],
+      "rules": [
+        { "type": "type", "expectedType": "string" }
+      ],
+      "normalization": {
+        "trim": true,
+        "unitType": "time"
+      }
+    },
+    {
+      "name": "quantity",
+      "type": "number",
+      "required": false,
+      "description": "Available stock quantity",
+      "aliases": ["stock", "units", "count", "sankhya"],
+      "rules": [
+        { "type": "type", "expectedType": "number" },
+        { "type": "min", "value": 1, "message": "Quantity must be at least 1." }
+      ]
+    }
+  ]
+}

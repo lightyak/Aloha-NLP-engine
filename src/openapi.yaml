@@ -1,0 +1,192 @@
+openapi: 3.1.0
+info:
+  title: Multilingual Conversational NLU Engine API
+  version: 1.0.0
+  description: >-
+    Dynamic, configuration-driven Conversational NLU Engine for artisan handicraft
+    and handloom onboarding (SIH 2026 Problem Statement 26090). Converts unstructured
+    multilingual voice/text into validated structured e-commerce product catalogs.
+servers:
+  - url: /api/v1
+    description: API v1 Base Path
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Returns health status of engine, database repository, and active providers.
+      responses:
+        '200':
+          description: Engine is healthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                      timestamp:
+                        type: string
+                      uptime:
+                        type: number
+
+  /sessions:
+    post:
+      summary: Create Conversational Session
+      description: Starts a new conversational onboarding session for an artisan.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                artisanId:
+                  type: string
+                language:
+                  type: string
+                  example: te
+                initialIntent:
+                  type: string
+                  example: CREATE_PRODUCT
+      responses:
+        '201':
+          description: Session created successfully.
+
+  /sessions/{id}:
+    get:
+      summary: Get Session Details
+      description: Retrieves the session state, current product draft, and message history.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session details retrieved.
+        '404':
+          description: Session not found.
+
+  /sessions/{id}/message:
+    post:
+      summary: Send Text Utterance to Session
+      description: Processes multilingual natural text input via dynamic NLU engine, extracting entities and updating product draft.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  example: 'ఇది కొండపల్లి బొమ్మ. చెక్కతో చేశాను. 800 రూపాయలు కావాలి.'
+                languageHint:
+                  type: string
+                  example: te
+      responses:
+        '200':
+          description: Message processed, intent recognized, draft updated.
+
+  /sessions/{id}/audio:
+    post:
+      summary: Upload Artisan Voice Audio
+      description: Transcribes audio buffer via STT and processes transcription through NLU. Audio is never stored permanently.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - audio
+              properties:
+                audio:
+                  type: string
+                  format: binary
+                languageHint:
+                  type: string
+                  example: te
+      responses:
+        '200':
+          description: Audio transcribed and session draft updated.
+
+  /products/validate:
+    post:
+      summary: Validate Product Attributes Draft
+      description: Validates and normalizes attributes against the active dynamic schema.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - attributes
+              properties:
+                attributes:
+                  type: object
+      responses:
+        '200':
+          description: Validation and normalization results.
+
+  /products/catalog:
+    post:
+      summary: Generate E-commerce Product Catalog
+      description: Generates title, descriptions, tags, and keywords for a validated product draft.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessionId:
+                  type: string
+                attributes:
+                  type: object
+                language:
+                  type: string
+      responses:
+        '200':
+          description: Catalog generated.
+
+  /products/publish:
+    post:
+      summary: Publish Product to Marketplace Catalog
+      description: Finalizes session draft, generates catalog, and persists product record in product repository.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sessionId
+              properties:
+                sessionId:
+                  type: string
+      responses:
+        '201':
+          description: Product published successfully.

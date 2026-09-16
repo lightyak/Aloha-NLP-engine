@@ -1,0 +1,107 @@
+{
+  "version": "1.0.0",
+  "intents": [
+    {
+      "name": "CREATE_PRODUCT",
+      "description": "Artisan starts describing a new handicraft or handloom item",
+      "examples": [
+        "This is a wooden toy",
+        "ఇది కొండపల్లి బొమ్మ",
+        "यह एक लकड़ी का खिलौना है",
+        "I want to add a silk saree"
+      ],
+      "defaultConfidence": 0.85
+    },
+    {
+      "name": "UPDATE_PRODUCT",
+      "description": "Artisan provides additional attributes or missing details for the product",
+      "examples": [
+        "It is blue in color",
+        "Made of teak wood",
+        "చెక్కతో చేశాను",
+        "It takes 3 days to make"
+      ],
+      "defaultConfidence": 0.80
+    },
+    {
+      "name": "CORRECT_INFORMATION",
+      "description": "Artisan corrects a previously stated attribute or value",
+      "examples": [
+        "Actually, the price is 900",
+        "No, it is cotton not silk",
+        "Change quantity to 10",
+        "కాదు, ధర 900 రూపాయలు"
+      ],
+      "defaultConfidence": 0.90
+    },
+    {
+      "name": "SET_PRICE",
+      "description": "Artisan specifically states or updates the price of the item",
+      "examples": [
+        "Price is 800 rupees",
+        "800 రూపాయలు కావాలి",
+        "Cost is 1500",
+        "₹1200"
+      ],
+      "defaultConfidence": 0.85
+    },
+    {
+      "name": "SET_QUANTITY",
+      "description": "Artisan specifies the available quantity or stock count",
+      "examples": [
+        "I have 5 pieces ready",
+        "ఐదు బొమ్మలు ఉన్నాయి",
+        "Quantity is 10"
+      ],
+      "defaultConfidence": 0.85
+    },
+    {
+      "name": "CONFIRM",
+      "description": "Artisan affirms or accepts a question or summary",
+      "examples": [
+        "Yes",
+        "Correct",
+        "అవును",
+        "సరే",
+        "हाँ",
+        "Looks good"
+      ],
+      "defaultConfidence": 0.95
+    },
+    {
+      "name": "REJECT",
+      "description": "Artisan declines or rejects a question or operation",
+      "examples": [
+        "No",
+        "Cancel",
+        "వద్దు",
+        "కాదు",
+        "नहीं",
+        "Don't save"
+      ],
+      "defaultConfidence": 0.95
+    },
+    {
+      "name": "CHECK_PRODUCT",
+      "description": "Artisan inquires about the current state or details of their draft",
+      "examples": [
+        "What have I entered so far?",
+        "Show my product",
+        "ఇప్పటివరకు ఏమి రికార్డ్ చేశారు?",
+        "Details check karo"
+      ],
+      "defaultConfidence": 0.80
+    },
+    {
+      "name": "PUBLISH_PRODUCT",
+      "description": "Artisan is satisfied and wants to finalize and publish the product to catalog",
+      "examples": [
+        "Publish this product",
+        "Finalize and save",
+        "పూర్తయింది, పబ్లిష్ చేయండి",
+        "Save to catalog"
+      ],
+      "defaultConfidence": 0.90
+    }
+  ]
+}

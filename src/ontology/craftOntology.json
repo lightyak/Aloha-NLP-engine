@@ -1,0 +1,178 @@
+{
+  "version": "1.0.0",
+  "categories": [
+    {
+      "id": "toys_and_dolls",
+      "name": "Toys & Dolls",
+      "aliases": ["toys", "dolls", "bommalu", "khilone", "wooden toys"],
+      "craftIds": ["kondapalli_toys", "channapatna_toys"]
+    },
+    {
+      "id": "handloom_textiles",
+      "name": "Handloom & Textiles",
+      "aliases": ["sarees", "textiles", "fabrics", "cheeralu", "kapde", "ikat"],
+      "craftIds": ["pochampally_ikat"]
+    },
+    {
+      "id": "metalcraft",
+      "name": "Metalcraft",
+      "aliases": ["metal", "inlay", "loha", "bidri"],
+      "craftIds": ["bidriware"]
+    },
+    {
+      "id": "folk_art",
+      "name": "Folk Art & Paintings",
+      "aliases": ["painting", "art", "chitralu", "chitrakala"],
+      "craftIds": ["madhubani_art"]
+    }
+  ],
+  "crafts": [
+    {
+      "id": "kondapalli_toys",
+      "name": "Kondapalli Craft",
+      "category": "toys_and_dolls",
+      "region": {
+        "state": "Andhra Pradesh",
+        "district": "NTR",
+        "giCertified": true
+      },
+      "aliases": [
+        "kondapalli",
+        "kondapalli bomma",
+        "kondapalli bommalu",
+        "kondapalli toy",
+        "kondapalli toys",
+        "కొండపల్లి",
+        "కొండపల్లి బొమ్మ",
+        "కొండపల్లి బొమ్మలు",
+        "कोंडापल्ली"
+      ],
+      "localNames": {
+        "te": "కొండపల్లి బొమ్మలు",
+        "hi": "कोंडापल्ली खिलौने"
+      },
+      "typicalMaterials": ["Wood", "Tella Poniki", "Natural Dyes", "Enamel"],
+      "techniques": ["Hand carving", "Natural pigment painting", "Joinery"],
+      "relatedCrafts": ["channapatna_toys"],
+      "description": "Traditional wooden toys crafted in Kondapalli, Andhra Pradesh using soft Tella Poniki wood."
+    },
+    {
+      "id": "channapatna_toys",
+      "name": "Channapatna Toys",
+      "category": "toys_and_dolls",
+      "region": {
+        "state": "Karnataka",
+        "district": "Ramanagara",
+        "giCertified": true
+      },
+      "aliases": ["channapatna", "channapatna toys", "lacquerware toys"],
+      "localNames": {
+        "kn": "ಚನ್ನಪಟ್ಟಣ ಆಟಿಕೆಗಳು",
+        "hi": "चन्नापटना खिलौने"
+      },
+      "typicalMaterials": ["Ivory Wood", "Vegetable Dyes", "Lacquer"],
+      "techniques": ["Lathe turning", "Lacquer polishing"],
+      "relatedCrafts": ["kondapalli_toys"],
+      "description": "Traditional wooden toys and dolls manufactured in Channapatna town, Karnataka."
+    },
+    {
+      "id": "pochampally_ikat",
+      "name": "Pochampally Ikat",
+      "category": "handloom_textiles",
+      "region": {
+        "state": "Telangana",
+        "district": "Yadadri Bhuvanagiri",
+        "giCertified": true
+      },
+      "aliases": ["pochampally", "pochampalli", "pochampally saree", "pochampally ikat", "ikat"],
+      "localNames": {
+        "te": "పోచంపల్లి ఇక్కత్",
+        "hi": "पोचमपल्ली इकत"
+      },
+      "typicalMaterials": ["Silk", "Cotton", "Natural Dyes"],
+      "techniques": ["Tie and dye", "Handloom weaving"],
+      "description": "Geometric patterned traditional handloom woven in Bhoodan Pochampally, Telangana."
+    },
+    {
+      "id": "bidriware",
+      "name": "Bidriware",
+      "category": "metalcraft",
+      "region": {
+        "state": "Karnataka",
+        "district": "Bidar",
+        "giCertified": true
+      },
+      "aliases": ["bidri", "bidriware", "bidri craft"],
+      "localNames": {
+        "kn": "ಬಿದ್ರಿ ಕಲೆ",
+        "hi": "बिदरीवेयर",
+        "ur": "بدری ویئر"
+      },
+      "typicalMaterials": ["Zinc", "Copper", "Silver"],
+      "techniques": ["Metal casting", "Engraving", "Silver inlay", "Soil oxidization"],
+      "description": "Renowned metal handicraft from Bidar involving silver inlay on blackened zinc-copper alloy."
+    },
+    {
+      "id": "madhubani_art",
+      "name": "Madhubani Art",
+      "category": "folk_art",
+      "region": {
+        "state": "Bihar",
+        "district": "Madhubani",
+        "giCertified": true
+      },
+      "aliases": ["madhubani", "mithila painting", "madhubani painting"],
+      "localNames": {
+        "hi": "मधुबनी चित्रकला",
+        "mai": "मधुबनी चित्रकला"
+      },
+      "typicalMaterials": ["Handmade Paper", "Canvas", "Natural Pigments"],
+      "techniques": ["Fingers", "Twigs", "Brushes", "Nib-pens"],
+      "description": "Traditional Indian folk painting originating from the Mithila region of Bihar."
+    }
+  ],
+  "materials": [
+    {
+      "canonical": "Wood",
+      "aliases": ["wood", "wooden", "timber", "softwood"],
+      "localNames": {
+        "te": "చెక్క",
+        "hi": "लकड़ी",
+        "kn": "ಮರ"
+      }
+    },
+    {
+      "canonical": "Silk",
+      "aliases": ["silk", "pure silk", "pattu"],
+      "localNames": {
+        "te": "పట్టు",
+        "hi": "रेशम",
+        "kn": "ರೇಷ್ಮೆ"
+      }
+    },
+    {
+      "canonical": "Cotton",
+      "aliases": ["cotton", "pure cotton", "khadi"],
+      "localNames": {
+        "te": "నూలు",
+        "hi": "कपास"
+      }
+    },
+    {
+      "canonical": "Silver",
+      "aliases": ["silver", "pure silver", "chandi"],
+      "localNames": {
+        "te": "వెండి",
+        "hi": "चाँदी"
+      }
+    },
+    {
+      "canonical": "Clay",
+      "aliases": ["clay", "terracotta", "earthen"],
+      "localNames": {
+        "te": "మట్టి",
+        "hi": "मिट्टी"
+      }
+    }
+  ]
+}
