@@ -10,13 +10,15 @@ import { productsRouter } from './products.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const openApiPath = path.resolve(__dirname, '../../openapi.yaml');
+const openApiPath = path.resolve(process.cwd(), 'src/openapi.yaml');
+
 let openApiSpec = {};
+
 try {
   const fileContent = fs.readFileSync(openApiPath, 'utf8');
   openApiSpec = YAML.parse(fileContent);
-} catch {
-  // Gracefully fallback if YAML file is unavailable
+} catch (error) {
+  console.error('Failed to load OpenAPI specification:', error);
 }
 
 import { authMiddleware } from '../../middleware/auth.middleware.js';
