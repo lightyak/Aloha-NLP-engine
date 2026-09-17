@@ -15,11 +15,16 @@ export class STTProviderFactory {
       return this.instance;
     }
 
-    const { provider, apiKey } = config.providers.stt;
+    const sttConfig = config.providers.stt;
 
-    if (provider === 'gemini' && apiKey) {
-      logger.info({ provider: 'gemini-stt' }, 'Initializing Gemini STT Provider');
-      this.instance = new GeminiSTTProvider(apiKey, config.providers.llm.model);
+    // Use the dedicated STT API key; fall back to the LLM key if not configured.
+    const apiKey = sttConfig.apiKey || config.providers.llm.apiKey;
+    // Use the dedicated STT model; fall back to the LLM model if not configured.
+    const model = sttConfig.model || config.providers.llm.model;
+
+    if (sttConfig.provider === 'gemini' && apiKey) {
+      logger.info({ provider: 'gemini-stt', model }, 'Initializing Gemini STT Provider');
+      this.instance = new GeminiSTTProvider(apiKey, model);
       return this.instance;
     }
 

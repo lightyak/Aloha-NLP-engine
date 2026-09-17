@@ -18,6 +18,7 @@ const envSchema = z
     LLM_MODEL: z.string().optional(),
     STT_PROVIDER: z.string().optional(),
     STT_API_KEY: z.string().optional(),
+    STT_MODEL: z.string().optional(),
   })
   .refine(
     (data) => {

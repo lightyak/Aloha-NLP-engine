@@ -27,6 +27,7 @@ export const config = {
     stt: {
       provider: env.STT_PROVIDER,
       apiKey: env.STT_API_KEY,
+      model: env.STT_MODEL,
     },
   },
   api: {
