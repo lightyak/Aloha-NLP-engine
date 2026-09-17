@@ -159,7 +159,37 @@ describe('NLUEngine', () => {
     expect(result.entities.material).toContain('Wood');
   });
 
-  it('TEST 8: LLM unavailable - falls back to deterministic extraction gracefully without crashing', async () => {
+  it('TEST 2b: Novel artisan material absent from ontology - preserves XYZ local wood concept with isKnown: false', async () => {
+    mockLLM.setCannedResponse('xyz local wood', {
+      intent: 'CREATE_PRODUCT',
+      confidence: 0.93,
+      entities: {
+        product_name: 'Handmade tribal figurine',
+        material: ['XYZ local wood'],
+        price: 500,
+      },
+      concepts: [
+        { name: 'material', value: 'XYZ local wood', type: 'material', isKnown: false, evidence: 'XYZ local wood' },
+      ],
+    });
+
+    const result = await nlu.process('This is a handmade tribal figurine made using a local wood called XYZ local wood, price is 500');
+
+    expect(result.entities.product_name).toBe('Handmade tribal figurine');
+    expect(result.entities.material).toEqual(expect.arrayContaining(['XYZ local wood']));
+    expect(result.entities.price).toBe(500);
+
+    // Concept must be preserved with isKnown: false
+    const matConcept = result.concepts?.find((c) => c.value === 'XYZ local wood');
+    expect(matConcept).toBeDefined();
+    expect(matConcept?.isKnown).toBe(false);
+
+    // Provenance must remain USER_EXPLICIT (not ONTOLOGY_MATCH)
+    const matDetail = result.entityDetails.find((e) => e.field === 'material');
+    expect(matDetail?.source).toBe('USER_EXPLICIT');
+  });
+
+  it('TEST 8: LLM unavailable - returns explicit degraded error state without pretending to extract', async () => {
     const failingLLM: typeof mockLLM = {
       name: 'failing-llm',
       generateStructured: async () => {
@@ -171,15 +201,18 @@ describe('NLUEngine', () => {
       isHealthy: async () => false,
     } as any;
 
-    const fallbackNLU = new NLUEngine({ llmProvider: failingLLM });
+    const failingNLU = new NLUEngine({ llmProvider: failingLLM });
     const utterance = 'కొండపల్లి బొమ్మ 800 రూపాయలు';
 
-    const result = await fallbackNLU.process(utterance);
+    const result = await failingNLU.process(utterance);
     expect(result).toBeDefined();
-    expect(result.intent.name).toBe('CREATE_PRODUCT');
-    expect(result.entities.price).toBe(800);
-    expect(result.entities.currency).toBe('INR');
-    expect(result.entities.craft_type).toBe('Kondapalli Craft');
+    expect(result.pipelineStatus).toBe('LLM_FAILED');
+    expect(result.diagnostics?.llmFailed).toBe(true);
+    expect(result.diagnostics?.llmSucceeded).toBe(false);
+    expect(result.diagnostics?.fallbackUsed).toBe(false);
+    expect(result.entities).toEqual({});
+    expect(result.overallConfidence).toBe(0.0);
+    expect(result.followUpQuestion).toContain('unavailable');
   });
 
   it('TEST 9: Etikoppaka Telugu Regression Case - extracts craft context, materials, price without hallucinating product_name or production_time', async () => {
@@ -201,9 +234,9 @@ describe('NLUEngine', () => {
     expect(result.missingFields).toContain('product_name');
     expect(result.followUpQuestion).toBe('ఈ సాంప్రదాయ బొమ్మ పేరు ఏమిటి?');
 
-    // Provenance & evidence: price is always grounded via deterministic regex from raw utterance
+    // Provenance & evidence: explicit user fact from utterance
     const priceDetail = result.entityDetails.find((e) => e.field === 'price');
-    expect(priceDetail?.source).toBe('DETERMINISTIC_EXTRACTION');
+    expect(priceDetail?.source).toBe('USER_EXPLICIT');
     expect(priceDetail?.confirmed).toBe(true);
   });
 

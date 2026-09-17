@@ -15,7 +15,6 @@ import { defaultLLMProvider } from '../../providers/llm/llmProvider.factory.js';
 import { DynamicSchemaRegistry, defaultSchemaRegistry } from '../../schemas/dynamicSchema.js';
 import { IntentRegistry, defaultIntentRegistry } from './intentRegistry.js';
 import { OntologyRegistry, defaultOntologyRegistry } from '../../ontology/ontologyRegistry.js';
-import { DeterministicExtractor } from './deterministicExtractor.js';
 import { DynamicPromptBuilder } from './dynamicPromptBuilder.js';
 import { NormalizationEngine } from '../normalization/normalizationEngine.js';
 import { ValidationError } from '../../utils/errors.js';
@@ -94,20 +93,16 @@ export class NLUEngine {
     } catch (error) {
       logger.warn(
         { err: error instanceof Error ? error.message : String(error) },
-        'LLM semantic processing failed, falling back to programmatic fallback'
+        'LLM semantic processing failed - returning degraded NLU state'
       );
       pipelineStatus = 'LLM_FAILED';
-    }
-
-    if (!llmSucceeded && pipelineStatus === 'LLM_FAILED') {
-      pipelineStatus = 'FALLBACK_USED';
     }
 
     // 3. Intent Resolution & Validation against IntentRegistry
     const isCorrection = Boolean(llmResult.isCorrection);
     const isDontKnow = Boolean(llmResult.isDontKnow || this.detectDontKnow(cleanText));
-    let resolvedIntentName = 'CREATE_PRODUCT';
-    let intentConfidence = 0.5;
+    let resolvedIntentName = llmSucceeded ? 'CREATE_PRODUCT' : 'UNKNOWN';
+    let intentConfidence = llmSucceeded ? 0.85 : 0.0;
 
     if (llmSucceeded && llmResult.intent) {
       const directMatch = this.intentRegistry.getIntent(llmResult.intent);
@@ -127,12 +122,9 @@ export class NLUEngine {
           intentConfidence = 0.75;
         }
       }
-    } else if (isCorrection) {
+    } else if (llmSucceeded && isCorrection) {
       resolvedIntentName = 'CORRECT_INFORMATION';
       intentConfidence = 0.85;
-    } else {
-      resolvedIntentName = 'CREATE_PRODUCT';
-      intentConfidence = llmSucceeded ? (llmResult.confidence ?? 0.85) : 0.5;
     }
 
     const intent: IntentResult = {
@@ -167,7 +159,7 @@ export class NLUEngine {
         // Extract value and evidence from either flat structure or rich LLMEntityValue
         let extractedVal: unknown;
         let evidence: string = cleanText;
-        let source: EntityProvenance = 'LLM_EXTRACTION';
+        let source: EntityProvenance = 'USER_EXPLICIT';
         let confirmed = true;
 
         if (typeof rawEntityVal === 'object' && rawEntityVal !== null && 'value' in rawEntityVal) {
@@ -199,15 +191,11 @@ export class NLUEngine {
         // Programmatic Normalization (e.g., currency, time units, trims)
         let normalizedVal = NormalizationEngine.normalizeFieldValue(fieldDef, groundedVal);
 
-        // Verification: Price is always grounded against the raw utterance via deterministic regex.
-        // When a currency pattern is found in the text, provenance is DETERMINISTIC_EXTRACTION
-        // regardless of whether it matches the LLM value — the artisan's exact words are the source of truth.
-        if (fieldDef.name === 'price') {
-          const userParsedCurrency = NormalizationEngine.parseCurrency(cleanText);
-          if (userParsedCurrency) {
-            normalizedVal = userParsedCurrency.amount;
-            source = 'DETERMINISTIC_EXTRACTION';
-            evidence = cleanText;
+        // Price Normalization: If price was provided as a string expression (e.g., "₹1,200", "800 rs"), normalize to numeric amount
+        if (fieldDef.name === 'price' && typeof extractedVal === 'string') {
+          const parsed = NormalizationEngine.parseCurrency(extractedVal);
+          if (parsed) {
+            normalizedVal = parsed.amount;
           }
         }
 
@@ -216,7 +204,7 @@ export class NLUEngine {
 
           let provenanceSource: EntityProvenance = isCorrection
             ? 'USER_CORRECTION'
-            : (source || 'LLM_EXTRACTION');
+            : (source || 'USER_EXPLICIT');
 
           // Programmatic ontology grounding is authoritative: if our registry confirms
           // the value exists in the ontology, promote provenance to ONTOLOGY_MATCH
@@ -234,27 +222,6 @@ export class NLUEngine {
             confirmed,
           });
         }
-      }
-    }
-
-    // 5. Fallback deterministic execution when LLM fails completely
-    if (!llmSucceeded) {
-      if (pipelineStatus !== 'DETERMINISTIC_VALIDATION_FAILED') {
-        pipelineStatus = 'FALLBACK_USED';
-      }
-      const deterministic = DeterministicExtractor.extract(cleanText, this.ontologyRegistry);
-      for (const [k, v] of Object.entries(deterministic.entities)) {
-        if (validEntities[k] === undefined) {
-          validEntities[k] = v;
-        }
-      }
-      for (const detail of deterministic.entityDetails) {
-        if (!entityDetails.some((e) => e.field === detail.field)) {
-          entityDetails.push(detail);
-        }
-      }
-      if (deterministic.isCorrectionCandidate) {
-        resolvedIntentName = 'CORRECT_INFORMATION';
       }
     }
 
@@ -278,7 +245,9 @@ export class NLUEngine {
     let followUpQuestion: string | undefined;
     let estimationOffered = Boolean(llmResult.estimationOffered || isDontKnow);
 
-    if (missingFields.length > 0) {
+    if (pipelineStatus === 'LLM_FAILED') {
+      followUpQuestion = 'NLU service is temporarily unavailable. Please try again.';
+    } else if (missingFields.length > 0) {
       if (llmResult.followUpQuestion) {
         followUpQuestion = llmResult.followUpQuestion;
       } else if (isDontKnow) {
@@ -292,10 +261,10 @@ export class NLUEngine {
     const diagnostics = {
       llmAttempted: true,
       llmSucceeded,
-      llmFailed: pipelineStatus === 'LLM_FAILED' || pipelineStatus === 'FALLBACK_USED',
+      llmFailed: pipelineStatus === 'LLM_FAILED',
       llmReturnedEmpty: pipelineStatus === 'LLM_RETURNED_EMPTY_RESULT',
       provider: this.llmProvider.name,
-      fallbackUsed: !llmSucceeded,
+      fallbackUsed: false,
       pipelineStatus,
     };
 

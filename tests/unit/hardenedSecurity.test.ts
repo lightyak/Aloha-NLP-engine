@@ -39,7 +39,7 @@ describe('Hardened NLU: Anti-Hallucination & Provenance', () => {
     expect((res.entities as Record<string, unknown>)['phone_number']).toBeUndefined();
   });
 
-  it('preserves provenance evidence for deterministic and ontology matches', async () => {
+  it('preserves provenance evidence for explicit user facts and ontology matches', async () => {
     const res = await defaultNLUEngine.process('ఇది కొండపల్లి బొమ్మ. చెక్కతో చేశాను. ధర 800 రూపాయలు.');
 
     expect(res.entityDetails.length).toBeGreaterThan(0);
@@ -50,25 +50,29 @@ describe('Hardened NLU: Anti-Hallucination & Provenance', () => {
 
     const priceDetail = res.entityDetails.find((e) => e.field === 'price');
     expect(priceDetail).toBeDefined();
-    expect(priceDetail?.source).toBe('DETERMINISTIC_EXTRACTION');
+    expect(priceDetail?.source).toBe('USER_EXPLICIT');
+    expect(priceDetail?.confirmed).toBe(true);
   });
 
-  it('explicit user evidence overrides contradictory weaker LLM inference', async () => {
+  it('preserves novel artisan material concepts not found in ontology', async () => {
     const mockLLM = new MockLLMProvider();
-    // LLM thinks price is 1200, but user said 800
-    mockLLM.setCannedResponse('kondapalli', {
+    mockLLM.setCannedResponse('novel concept', {
       intent: 'CREATE_PRODUCT',
-      confidence: 0.8,
+      confidence: 0.9,
       entities: {
-        price: 1200,
+        product_name: 'Bamboo flutes',
+        material: ['Wild River Bamboo'],
       },
+      concepts: [
+        { name: 'material', value: 'Wild River Bamboo', type: 'material', isKnown: false, evidence: 'Wild River Bamboo' },
+      ],
     });
 
     defaultNLUEngine.setLLMProvider(mockLLM);
 
-    const res = await defaultNLUEngine.process('ఇది కొండపల్లి బొమ్మ. ధర 800 రూపాయలు.');
-    // Explicit user deterministic extraction wins
-    expect(res.entities.price).toBe(800);
+    const res = await defaultNLUEngine.process('These are bamboo flutes made using novel concept Wild River Bamboo');
+    expect(res.entities.material).toEqual(expect.arrayContaining(['Wild River Bamboo']));
+    expect(res.concepts?.some((c) => c.value === 'Wild River Bamboo' && c.isKnown === false)).toBe(true);
   });
 });
 
