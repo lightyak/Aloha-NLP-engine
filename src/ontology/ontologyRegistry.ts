@@ -59,6 +59,10 @@ export class OntologyRegistry {
     return Array.from(this.categories.values());
   }
 
+  public getAllMaterials(): OntologyData['materials'] {
+    return [...this.materials];
+  }
+
   public getCraftsByCategory(categoryId: string): CraftDefinition[] {
     return this.getAllCrafts().filter((c) => c.category === categoryId);
   }

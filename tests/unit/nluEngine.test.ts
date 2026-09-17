@@ -182,6 +182,109 @@ describe('NLUEngine', () => {
     expect(result.entities.craft_type).toBe('Kondapalli Craft');
   });
 
+  it('TEST 9: Etikoppaka Telugu Regression Case - extracts craft context, materials, price without hallucinating product_name or production_time', async () => {
+    const utterance = 'ఆంధ్రప్రదేశ్ అనాకాపల్లి జిల్లాలోని ఏటికొప్పాక గ్రామానికి చెందిన ఈ సాంప్రదాయ బొమ్మను సహజమైన అంకుడు చెక్క మరియు లక్క రంగులతో తయారు చేశారు. దీని ధర రూ. 600/-.';
+    const result = await nlu.process(utterance);
+
+    expect(result.intent.name).toBe('CREATE_PRODUCT');
+    expect(result.detectedLanguage).toBe('te');
+    expect(result.entities.craft_type).toBe('Etikoppaka Craft');
+    expect(result.entities.category).toBe('toys_and_dolls');
+    expect(result.entities.material).toContain('Wood');
+    expect(result.entities.material).toContain('Lacquer');
+    expect(result.entities.price).toBe(600);
+    expect(result.entities.currency).toBe('INR');
+
+    // Missing fields: product_name and production_time must NOT be hallucinated
+    expect(result.entities.product_name).toBeUndefined();
+    expect(result.entities.production_time).toBeUndefined();
+    expect(result.missingFields).toContain('product_name');
+    expect(result.followUpQuestion).toBe('ఈ సాంప్రదాయ బొమ్మ పేరు ఏమిటి?');
+
+    // Provenance & evidence: price is always grounded via deterministic regex from raw utterance
+    const priceDetail = result.entityDetails.find((e) => e.field === 'price');
+    expect(priceDetail?.source).toBe('DETERMINISTIC_EXTRACTION');
+    expect(priceDetail?.confirmed).toBe(true);
+  });
+
+  it('TEST 10: Telugu + English code-switching - extracts mixed language utterance and asks follow-up in Telugu', async () => {
+    const utterance = 'Nenu wooden toys chestanu, price is 500 rupees';
+    const result = await nlu.process(utterance);
+
+    expect(result.entities.product_name).toBe('wooden toys');
+    expect(result.entities.material).toContain('Wood');
+    expect(result.entities.price).toBe(500);
+    expect(result.missingFields).toContain('craft_type');
+    expect(result.followUpQuestion).toBeDefined();
+  });
+
+  it('TEST 11: Hindi + English code-switching - extracts mixed Hindi-English utterance', async () => {
+    const utterance = 'Main handmade wooden toys banata hoon, rate is 600 rupees';
+    const result = await nlu.process(utterance);
+
+    expect(result.entities.product_name).toBe('handmade wooden toys');
+    expect(result.entities.material).toContain('Wood');
+    expect(result.entities.price).toBe(600);
+    expect(result.missingFields).toContain('craft_type');
+  });
+
+  it('TEST 12: Tamil + English code-switching - extracts mixed Tamil-English utterance', async () => {
+    const utterance = 'Naan wooden toys seigiren, price 400 rupees';
+    const result = await nlu.process(utterance);
+
+    expect(result.entities.product_name).toBe('wooden toys');
+    expect(result.entities.price).toBe(400);
+  });
+
+  it('TEST 13: Kannada + English code-switching - extracts mixed Kannada-English utterance', async () => {
+    const utterance = 'Naanu wooden toys maduttene, price 450 rupees';
+    const result = await nlu.process(utterance);
+
+    expect(result.entities.product_name).toBe('wooden toys');
+    expect(result.entities.price).toBe(450);
+  });
+
+  it('TEST 14: Uncertainty / "I don\'t know" - leaves field unresolved and offers estimation', async () => {
+    const utterance = "I don't know how many days it takes";
+    const result = await nlu.process(utterance);
+
+    expect(result.isDontKnow).toBe(true);
+    expect(result.estimationOffered).toBe(true);
+    expect(result.entities.production_time).toBeUndefined();
+    expect(result.followUpQuestion).toContain('estimate');
+  });
+
+  it('TEST 15: Telugu "తెలియదు" uncertainty - generates estimation offer in Telugu', async () => {
+    const utterance = 'నాకు సమయం ఎంత పడుతుందో తెలియదు';
+    const result = await nlu.process(utterance);
+
+    expect(result.isDontKnow).toBe(true);
+    expect(result.estimationOffered).toBe(true);
+    expect(result.followUpQuestion).toContain('అంచనా');
+  });
+
+  it('TEST 16: Explicit estimation permission - assigns SYSTEM_ESTIMATE provenance with confirmed: false', async () => {
+    const utterance = 'Yes, estimate it';
+    const result = await nlu.process(utterance, { allowEstimates: true });
+
+    expect(result.entities.production_time).toBe('3 days');
+    const timeDetail = result.entityDetails.find((e) => e.field === 'production_time');
+    expect(timeDetail?.source).toBe('SYSTEM_ESTIMATE');
+    expect(timeDetail?.confirmed).toBe(false);
+  });
+
+  it('TEST 17: Invalid LLM schema output - catches validation error and logs deterministic validation status', async () => {
+    mockLLM.setCannedResponse('bad output', {
+      intent: 'CREATE_PRODUCT',
+      confidence: 1.5, // Invalid confidence > 1.0
+      entities: 'invalid-not-an-object',
+    });
+
+    const result = await nlu.process('This will cause bad output');
+    expect(result).toBeDefined();
+    expect(result.pipelineStatus).toBe('DETERMINISTIC_VALIDATION_FAILED');
+  });
+
   it('should reject empty input with ValidationError', async () => {
     await expect(nlu.process('')).rejects.toThrow(ValidationError);
     await expect(nlu.process('   ')).rejects.toThrow(ValidationError);
