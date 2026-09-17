@@ -34,12 +34,16 @@ export class MockLLMProvider implements ILLMProvider {
     // Heuristic mock parser for multilingual benchmark utterances
     // 1. Natural correction: "Actually, they are made from terracotta" or "Actually, the price is 900"
     if (lowerPrompt.includes('actually') || lowerPrompt.includes('no,') || lowerPrompt.includes('change') || lowerPrompt.includes('కాదు') || lowerPrompt.includes('తప్పు')) {
-      const priceMatch = prompt.match(/(?:price|rate|cost|రూపాయలు|vela)\s*(?:is|to|:)?\s*(\d+)/i);
+      const priceMatch = prompt.match(/(?:price|rate|cost|ధర|వెల|कीमत|రూపాయలు|vela)\s*(?:is|to|:|=)?\s*(\d+(?:,\d+)*)/i) ||
+        prompt.match(/(\d+(?:,\d+)*)\s*(?:రూపాయలు|rupees|rs|रुपये)/i);
       const qtyMatch = prompt.match(/(?:quantity|units|pieces)\s*(?:to|is|:)?\s*(\d+)/i);
       const terracottaMatch = lowerPrompt.includes('terracotta') || lowerPrompt.includes('clay');
 
       const entities: Record<string, unknown> = {};
-      if (priceMatch) entities.price = { value: parseInt(priceMatch[1], 10), evidence: priceMatch[0], source: 'USER_CORRECTION', confirmed: true };
+      if (priceMatch) {
+        const rawNum = (priceMatch[1] || priceMatch[0]).replace(/[^0-9]/g, '');
+        entities.price = { value: parseInt(rawNum, 10), evidence: priceMatch[0], source: 'USER_CORRECTION', confirmed: true };
+      }
       if (qtyMatch) entities.quantity = { value: parseInt(qtyMatch[1], 10), evidence: qtyMatch[0], source: 'USER_CORRECTION', confirmed: true };
       if (terracottaMatch) entities.material = { value: ['terracotta'], evidence: 'terracotta', source: 'USER_CORRECTION', confirmed: true };
 
@@ -143,6 +147,54 @@ export class MockLLMProvider implements ILLMProvider {
           ],
           missingInformation: ['product_name', 'production_time'],
           followUpQuestion: 'ఈ సాంప్రదాయ బొమ్మ పేరు ఏమిటి?',
+        } as T,
+      };
+    }
+
+    // 6b. Nimmalakunta Leather Craft Telugu Case
+    // "ఆంధ్రప్రదేశ్ అనంతపురం జిల్లా నిమ్మలకుంట గ్రామానికి చెందిన ఈ సాంప్రదాయ తోలు బొమ్మను మేక చర్మంతో చేతితో రూపొందించారు. దీని వెల రూ. 1,200/-."
+    if (prompt.includes('నిమ్మలకుంట') || prompt.includes('తోలు బొమ్మ') || (prompt.includes('nimmalakunta') && (prompt.includes('1200') || prompt.includes('1,200')))) {
+      return {
+        data: {
+          intent: 'CREATE_PRODUCT',
+          confidence: 0.94,
+          isCorrection: false,
+          language: 'te',
+          entities: {
+            craft_type: { value: 'Nimmalakunta Leather Craft', evidence: 'నిమ్మలకుంట గ్రామానికి చెందిన ఈ సాంప్రదాయ తోలు బొమ్మను', source: 'USER_EXPLICIT', confirmed: true },
+            category: { value: 'toys_and_dolls', evidence: 'తోలు బొమ్మను', source: 'USER_EXPLICIT', confirmed: true },
+            material: { value: ['Leather', 'Goat Skin'], evidence: 'మేక చర్మంతో', source: 'USER_EXPLICIT', confirmed: true },
+            price: { value: 1200, evidence: 'రూ. 1,200/-', source: 'USER_EXPLICIT', confirmed: true },
+            currency: { value: 'INR', evidence: 'రూ.', source: 'USER_EXPLICIT', confirmed: true },
+          },
+          concepts: [
+            { name: 'craft_context', value: 'Nimmalakunta', type: 'craft_context', isKnown: true, evidence: 'నిమ్మలకుంట' },
+            { name: 'material', value: 'Leather', type: 'material', isKnown: true, evidence: 'తోలు బొమ్మ' },
+            { name: 'material', value: 'Goat Skin', type: 'material', isKnown: true, evidence: 'మేక చర్మంతో' },
+          ],
+          missingInformation: ['product_name', 'production_time'],
+          followUpQuestion: 'ఈ సాంప్రదాయ తోలు బొమ్మ పేరు ఏమిటి?',
+        } as T,
+      };
+    }
+
+    // 6c. Code-switched Telugu + English Leather Toy Case: "ఇది traditional leather toy. Price 1200 rupees."
+    if (lowerPrompt.includes('traditional leather toy') || (lowerPrompt.includes('leather toy') && lowerPrompt.includes('1200'))) {
+      return {
+        data: {
+          intent: 'CREATE_PRODUCT',
+          confidence: 0.92,
+          isCorrection: false,
+          language: 'te',
+          entities: {
+            craft_type: { value: 'Nimmalakunta Leather Craft', evidence: 'traditional leather toy', source: 'USER_EXPLICIT', confirmed: true },
+            category: { value: 'toys_and_dolls', evidence: 'toy', source: 'USER_EXPLICIT', confirmed: true },
+            material: { value: ['Leather'], evidence: 'leather', source: 'USER_EXPLICIT', confirmed: true },
+            price: { value: 1200, evidence: '1200 rupees', source: 'USER_EXPLICIT', confirmed: true },
+            currency: { value: 'INR', evidence: 'rupees', source: 'USER_EXPLICIT', confirmed: true },
+          },
+          missingInformation: ['product_name', 'production_time'],
+          followUpQuestion: 'ఈ traditional leather toy పేరు ఏమిటి?',
         } as T,
       };
     }

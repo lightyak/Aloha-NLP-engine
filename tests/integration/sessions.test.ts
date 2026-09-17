@@ -63,6 +63,37 @@ describe('Sessions API', () => {
     expect(res.status).toBe(404);
   });
 
+  it('POST /api/v1/sessions/:id/message updates productDraft when artisan sends new explicit craft information across turns', async () => {
+    const created = await request(app).post('/api/v1/sessions').send({ language: 'te' });
+    const sessionId = created.body.data.session.id;
+
+    // Turn 1: Etikoppaka craft
+    const t1 = await request(app)
+      .post(`/api/v1/sessions/${sessionId}/message`)
+      .send({ text: 'ఆంధ్రప్రదేశ్ అనాకాపల్లి జిల్లాలోని ఏటికొప్పాక గ్రామానికి చెందిన ఈ సాంప్రదాయ బొమ్మను సహజమైన అంకుడు చెక్క మరియు లక్క రంగులతో తయారు చేశారు. దీని ధర రూ. 600/-.' });
+
+    expect(t1.status).toBe(200);
+    expect(t1.body.data.session.productDraft.craft_type).toBe('Etikoppaka Craft');
+    expect(t1.body.data.session.productDraft.price).toBe(600);
+
+    // Turn 2: Artisan sends Nimmalakunta Leather Toy utterance
+    const t2 = await request(app)
+      .post(`/api/v1/sessions/${sessionId}/message`)
+      .send({ text: 'ఆంధ్రప్రదేశ్ అనంతపురం జిల్లా నిమ్మలకుంట గ్రామానికి చెందిన ఈ సాంప్రదాయ తోలు బొమ్మను మేక చర్మంతో చేతితో రూపొందించారు. దీని వెల రూ. 1,200/-.' });
+
+    expect(t2.status).toBe(200);
+    expect(t2.body.data.nlu.extractedEntities.craft_type).toBe('Nimmalakunta Leather Craft');
+    expect(t2.body.data.nlu.extractedEntities.price).toBe(1200);
+    expect(t2.body.data.nlu.extractedEntities.material).toEqual(expect.arrayContaining(['Leather']));
+
+    // Verify session.productDraft reflects the new explicit information
+    expect(t2.body.data.session.productDraft.craft_type).toBe('Nimmalakunta Leather Craft');
+    expect(t2.body.data.session.productDraft.price).toBe(1200);
+    expect(t2.body.data.session.productDraft.material).toEqual(expect.arrayContaining(['Leather']));
+    expect(t2.body.data.session.productDraft.product_name).toBeUndefined();
+    expect(t2.body.data.session.missingFields).toContain('product_name');
+  });
+
   it('POST /api/v1/sessions/:id/message should return 400 for empty text', async () => {
     const created = await request(app).post('/api/v1/sessions').send({});
     const sessionId = created.body.data.session.id;

@@ -111,6 +111,17 @@ export type NLUPipelineStatus =
   | 'DETERMINISTIC_VALIDATION_FAILED'
   | 'FALLBACK_USED';
 
+export interface NLUDiagnostics {
+  llmAttempted: boolean;
+  llmSucceeded: boolean;
+  llmFailed: boolean;
+  llmReturnedEmpty: boolean;
+  provider: string;
+  model?: string;
+  fallbackUsed: boolean;
+  pipelineStatus: NLUPipelineStatus;
+}
+
 export interface NLUExtractionResult {
   intent: IntentResult;
   entities: Record<string, unknown>;
@@ -126,5 +137,6 @@ export interface NLUExtractionResult {
   followUpQuestion?: string;
   estimationOffered?: boolean;
   pipelineStatus?: NLUPipelineStatus;
+  diagnostics?: NLUDiagnostics;
 }
 

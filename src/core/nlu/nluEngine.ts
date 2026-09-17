@@ -289,6 +289,16 @@ export class NLUEngine {
       }
     }
 
+    const diagnostics = {
+      llmAttempted: true,
+      llmSucceeded,
+      llmFailed: pipelineStatus === 'LLM_FAILED' || pipelineStatus === 'FALLBACK_USED',
+      llmReturnedEmpty: pipelineStatus === 'LLM_RETURNED_EMPTY_RESULT',
+      provider: this.llmProvider.name,
+      fallbackUsed: !llmSucceeded,
+      pipelineStatus,
+    };
+
     return {
       intent,
       entities: normalizedEntities,
@@ -304,6 +314,7 @@ export class NLUEngine {
       followUpQuestion,
       estimationOffered,
       pipelineStatus,
+      diagnostics,
     };
   }
 

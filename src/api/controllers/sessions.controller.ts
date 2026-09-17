@@ -91,6 +91,8 @@ export class SessionsController {
             missingFields: nluResult.missingFields,
             validation: nluResult.validation,
             followUpQuestion: nluResult.followUpQuestion,
+            pipelineStatus: nluResult.pipelineStatus,
+            diagnostics: nluResult.diagnostics,
           },
           assistantMessage,
         },

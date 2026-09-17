@@ -129,12 +129,76 @@
       "typicalMaterials": ["Handmade Paper", "Canvas", "Natural Pigments"],
       "techniques": ["Fingers", "Twigs", "Brushes", "Nib-pens"],
       "description": "Traditional Indian folk painting originating from the Mithila region of Bihar."
+    },
+    {
+      "id": "etikoppaka_toys",
+      "name": "Etikoppaka Craft",
+      "category": "toys_and_dolls",
+      "region": {
+        "state": "Andhra Pradesh",
+        "district": "Anakapalli",
+        "giCertified": true
+      },
+      "aliases": [
+        "etikoppaka",
+        "etikoppaka toys",
+        "etikoppaka craft",
+        "ఏటికొప్పాక",
+        "ఏటికొప్పాక బొమ్మలు",
+        "ఏటికొప్పాక బొమ్మ",
+        "ఎటికొప్పాక",
+        "एतिकोपक्का"
+      ],
+      "localNames": {
+        "te": "ఏటికొప్పాక బొమ్మలు",
+        "hi": "एतिकोपक्का खिलौने"
+      },
+      "typicalMaterials": ["Wood", "Ankudu", "Lacquer", "Natural Dyes"],
+      "techniques": ["Lathe turning", "Lacquer coating", "Hand carving"],
+      "relatedCrafts": ["kondapalli_toys", "channapatna_toys"],
+      "description": "Traditional wooden lacquer toys made using soft Ankudu wood in Etikoppaka, Andhra Pradesh."
+    },
+    {
+      "id": "tholu_bommalata",
+      "name": "Nimmalakunta Leather Craft",
+      "category": "toys_and_dolls",
+      "region": {
+        "state": "Andhra Pradesh",
+        "district": "Sri Sathya Sai / Anantapur",
+        "giCertified": true
+      },
+      "aliases": [
+        "tholu bommalata",
+        "tholu bomma",
+        "tholu bommalu",
+        "nimmalakunta",
+        "nimmalakunta craft",
+        "nimmalakunta leather toys",
+        "leather puppets",
+        "leather puppetry",
+        "leather doll",
+        "leather toys",
+        "తోలు బొమ్మలాట",
+        "తోలు బొమ్మ",
+        "తోలు బొమ్మలు",
+        "నిమ్మలకుంట",
+        "నిమ్మలకుంట తోలు బొమ్మలు",
+        "चमड़े की कठपुतली"
+      ],
+      "localNames": {
+        "te": "నిమ్మలకుంట తోలు బొమ్మలు",
+        "hi": "निम्मलकुंटा चमड़े की कठपुतली"
+      },
+      "typicalMaterials": ["Leather", "Goat Skin", "Parchment", "Natural Dyes"],
+      "techniques": ["Parchment curing", "Perforation", "Natural dye painting"],
+      "relatedCrafts": ["kondapalli_toys"],
+      "description": "GI-tagged traditional shadow leather puppetry, decorative lamps, and dolls from Nimmalakunta, Andhra Pradesh."
     }
   ],
   "materials": [
     {
       "canonical": "Wood",
-      "aliases": ["wood", "wooden", "timber", "softwood"],
+      "aliases": ["wood", "wooden", "timber", "softwood", "ankudu", "tella poniki"],
       "localNames": {
         "te": "చెక్క",
         "hi": "लकड़ी",
@@ -172,6 +236,39 @@
       "localNames": {
         "te": "మట్టి",
         "hi": "मिट्टी"
+      }
+    },
+    {
+      "canonical": "Leather",
+      "aliases": ["leather", "hide", "parchment", "chamra"],
+      "localNames": {
+        "te": "తోలు",
+        "hi": "चमड़ा",
+        "kn": "ಚರ್ಮ"
+      }
+    },
+    {
+      "canonical": "Goat Skin",
+      "aliases": ["goat skin", "goat leather", "sheep skin", "charka"],
+      "localNames": {
+        "te": "మేక చర్మం",
+        "hi": "बकरी की खाल"
+      }
+    },
+    {
+      "canonical": "Lacquer",
+      "aliases": ["lacquer", "lac", "resin"],
+      "localNames": {
+        "te": "లక్క",
+        "hi": "लाख"
+      }
+    },
+    {
+      "canonical": "Natural Dyes",
+      "aliases": ["natural dyes", "vegetable dyes", "organic colors", "pigments"],
+      "localNames": {
+        "te": "సహజ రంగులు",
+        "hi": "प्राकृतिक रंग"
       }
     }
   ]

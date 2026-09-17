@@ -285,6 +285,56 @@ describe('NLUEngine', () => {
     expect(result.pipelineStatus).toBe('DETERMINISTIC_VALIDATION_FAILED');
   });
 
+  it('TEST 18: Nimmalakunta Leather Craft Regression Case - extracts craft, leather material, price without hallucinating product_name or production_time', async () => {
+    const utterance = 'ఆంధ్రప్రదేశ్ అనంతపురం జిల్లా నిమ్మలకుంట గ్రామానికి చెందిన ఈ సాంప్రదాయ తోలు బొమ్మను మేక చర్మంతో చేతితో రూపొందించారు. దీని వెల రూ. 1,200/-.';
+    const previousDraft = {
+      craft_type: 'Etikoppaka Craft',
+      category: 'toys_and_dolls',
+      material: ['Wood', 'Lacquer'],
+      price: 600,
+      currency: 'INR',
+    };
+
+    const result = await nlu.process(utterance, { currentDraft: previousDraft });
+
+    expect(result.intent.name).toBe('CREATE_PRODUCT');
+    expect(result.detectedLanguage).toBe('te');
+    expect(result.entities.craft_type).toBe('Nimmalakunta Leather Craft');
+    expect(result.entities.category).toBe('toys_and_dolls');
+    expect(result.entities.material).toEqual(expect.arrayContaining(['Leather']));
+    expect(result.entities.price).toBe(1200);
+    expect(result.entities.currency).toBe('INR');
+
+    // Missing fields: product_name and production_time must NOT be hallucinated
+    expect(result.entities.product_name).toBeUndefined();
+    expect(result.entities.production_time).toBeUndefined();
+    expect(result.missingFields).toContain('product_name');
+    expect(result.followUpQuestion).toBeDefined();
+    expect(result.followUpQuestion).toContain('బొమ్మ');
+  });
+
+  it('TEST 19: Telugu natural correction over existing draft replaces price', async () => {
+    const utterance = 'కాదు, ధర 1200 రూపాయలు.';
+    const previousDraft = {
+      craft_type: 'Etikoppaka Craft',
+      price: 600,
+    };
+
+    const result = await nlu.process(utterance, { currentDraft: previousDraft });
+
+    expect(result.isCorrection).toBe(true);
+    expect(result.entities.price).toBe(1200);
+  });
+
+  it('TEST 20: Code-switched Telugu + English Leather Toy - extracts material and price', async () => {
+    const utterance = 'ఇది traditional leather toy. Price 1200 rupees.';
+    const result = await nlu.process(utterance);
+
+    expect(result.entities.material).toEqual(expect.arrayContaining(['Leather']));
+    expect(result.entities.price).toBe(1200);
+    expect(result.missingFields).toContain('product_name');
+  });
+
   it('should reject empty input with ValidationError', async () => {
     await expect(nlu.process('')).rejects.toThrow(ValidationError);
     await expect(nlu.process('   ')).rejects.toThrow(ValidationError);

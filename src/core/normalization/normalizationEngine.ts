@@ -125,34 +125,67 @@ export class NormalizationEngine {
   }
 
   /**
-   * Parse amounts and currencies from strings like "800 rupees", "₹800", "800 rs", "850 రూపాయలు"
+   * Parse amounts and currencies from strings like "800 rupees", "₹800", "800 rs", "850 రూపాయలు", "రూ. 1,200/-", "ధర 800"
    */
   public static parseCurrency(
     input: string,
     customAliases?: Record<string, string>
   ): CurrencyNormalizationResult | null {
+    if (!input || !input.trim()) return null;
     const currencyMap = { ...this.defaultCurrencyMap, ...customAliases };
 
     // Currency words/symbols pattern
-    const currPattern = '[₹$€]|rs\\.?|rupees?|roopayalu|రూపాయలు|రూపాయి|రూ\\.?|रुपये|रुपया|रु\\.?|inr|usd|eur';
-    const regex = new RegExp(`(${currPattern})?\\s*(\\d+(?:,\\d+)*(?:\\.\\d+)?)\\s*(${currPattern})?`, 'i');
+    const currPattern = '[₹$€]|rs\\.?|rupees?|roopayalu|రూపాయలు|రూపాయి|రూ\\.?|రూ|रुपये|रुपया|रु\\.?|रु|inr|usd|eur';
+    const priceKeywords = 'price|rate|cost|ధర|వెల|ఖరీదు|कीमत|दर|मूल्य|vela|dhara';
 
-    const match = input.match(regex);
-    if (!match) return null;
+    // 1. Explicit currency with prefix (e.g., ₹800, రూ. 1,200, Rs. 500, $50)
+    const prefixRegex = new RegExp(`(${currPattern})\\s*(\\d+(?:,\\d+)*(?:\\.\\d+)?)`, 'i');
+    const prefixMatch = input.match(prefixRegex);
+    if (prefixMatch && prefixMatch[2]) {
+      const rawNumber = prefixMatch[2].replace(/,/g, '');
+      const amount = parseFloat(rawNumber);
+      if (!isNaN(amount)) {
+        const symbol = prefixMatch[1]?.toLowerCase();
+        const currency = symbol && currencyMap[symbol] ? currencyMap[symbol] : 'INR';
+        return { amount, currency };
+      }
+    }
 
-    const prefix = match[1]?.toLowerCase();
-    const rawNumber = match[2]?.replace(/,/g, '');
-    const suffix = match[3]?.toLowerCase();
+    // 2. Explicit currency with suffix (e.g., 800 రూపాయలు, 1,200 rs, 500 rupees, 1,200/-)
+    const suffixRegex = new RegExp(`(\\d+(?:,\\d+)*(?:\\.\\d+)?)\\s*(?:/[-–])?\\s*(${currPattern})`, 'i');
+    const suffixMatch = input.match(suffixRegex);
+    if (suffixMatch && suffixMatch[1]) {
+      const rawNumber = suffixMatch[1].replace(/,/g, '');
+      const amount = parseFloat(rawNumber);
+      if (!isNaN(amount)) {
+        const symbol = suffixMatch[2]?.toLowerCase();
+        const currency = symbol && currencyMap[symbol] ? currencyMap[symbol] : 'INR';
+        return { amount, currency };
+      }
+    }
 
-    const amount = parseFloat(rawNumber);
-    if (isNaN(amount)) return null;
+    // 3. Price keyword preceding number (e.g., ధర 800, rate is 1200, వెల 1,200, price 950)
+    const keywordRegex = new RegExp(`(?:${priceKeywords})\\s*(?:is|:|to|=|గారు)?\\s*(\\d+(?:,\\d+)*(?:\\.\\d+)?)`, 'i');
+    const kwMatch = input.match(keywordRegex);
+    if (kwMatch && kwMatch[1]) {
+      const rawNumber = kwMatch[1].replace(/,/g, '');
+      const amount = parseFloat(rawNumber);
+      if (!isNaN(amount)) {
+        return { amount, currency: 'INR' };
+      }
+    }
 
-    const matchedCurrencyStr = prefix || suffix;
-    const currency = matchedCurrencyStr && currencyMap[matchedCurrencyStr]
-      ? currencyMap[matchedCurrencyStr]
-      : 'INR';
+    // 4. Standalone numeric string (e.g. user answered "800" or "1200" directly to a price question)
+    const standaloneMatch = input.trim().match(/^(\d+(?:,\d+)*(?:\.\d+)?)$/);
+    if (standaloneMatch && standaloneMatch[1]) {
+      const rawNumber = standaloneMatch[1].replace(/,/g, '');
+      const amount = parseFloat(rawNumber);
+      if (!isNaN(amount)) {
+        return { amount, currency: 'INR' };
+      }
+    }
 
-    return { amount, currency };
+    return null;
   }
 
   /**

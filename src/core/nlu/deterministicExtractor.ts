@@ -51,14 +51,18 @@ export class DeterministicExtractor {
     }
 
     // 4. Deterministic Material Detection via Ontology
-    const words = text.split(/[\s,.;:!?]+/);
+    const cleanLowerText = text.toLowerCase();
     const materialsFound: string[] = [];
-    for (const word of words) {
-      if (word.length > 1) {
-        const mat = ontology.findMaterial(word);
-        if (mat && !materialsFound.includes(mat)) {
-          materialsFound.push(mat);
-        }
+    const allMaterials = ontology.getAllMaterials();
+
+    for (const mat of allMaterials) {
+      const isMatch =
+        cleanLowerText.includes(mat.canonical.toLowerCase()) ||
+        mat.aliases.some((alias) => cleanLowerText.includes(alias.toLowerCase())) ||
+        (mat.localNames && Object.values(mat.localNames).some((loc) => cleanLowerText.includes(loc.toLowerCase())));
+
+      if (isMatch && !materialsFound.includes(mat.canonical)) {
+        materialsFound.push(mat.canonical);
       }
     }
     if (materialsFound.length > 0) {
