@@ -34,3 +34,14 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary scratch scripts
+scratch_*
+scratch/
+
+# Audio Test files
+audio-test-files/
+*.wav
+*.mp3
+*.m4a
+*.mp4

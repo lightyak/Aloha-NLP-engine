@@ -83,10 +83,11 @@ export class GeminiSTTProvider implements ISTTProvider {
       throw new ProviderError('GeminiSTT', this.redact(raw));
     }
 
-    const json = responseJson as Record<string, unknown>;
+    const json = responseJson as Record<string, any>;
+    console.log('GEMINI STT RESPONSE:', JSON.stringify(json, null, 2));
 
-    if ((json as any).promptFeedback?.blockReason) {
-      throw new ProviderError('GeminiSTT', `Blocked by safety policy: ${(json as any).promptFeedback.blockReason}`);
+    if (json.promptFeedback?.blockReason) {
+      throw new ProviderError('GeminiSTT', `Blocked by safety policy: ${json.promptFeedback.blockReason}`);
     }
 
     const candidate = (json as any).candidates?.[0];
@@ -94,7 +95,13 @@ export class GeminiSTTProvider implements ISTTProvider {
       throw new ProviderError('GeminiSTT', 'No candidate returned from Gemini STT response');
     }
 
-    const rawText: string = candidate?.content?.parts?.[0]?.text ?? '';
+    const parts = candidate?.content?.parts ?? [];
+
+    const rawText = parts
+      .map((part: any) => part?.audioTranscription?.text ?? part?.text ?? '')
+      .filter(Boolean)
+      .join(' ');
+
     const text = rawText.trim();
 
     if (!text) {

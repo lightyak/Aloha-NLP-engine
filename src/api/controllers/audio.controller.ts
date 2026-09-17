@@ -90,10 +90,14 @@ export class AudioController {
       });
 
       let assistantMessage: string;
-      if (nluResult.missingFields.length > 0) {
-        assistantMessage = `Got it! I still need: ${nluResult.missingFields.join(', ')}.`;
-      } else {
+      if (nluResult.followUpQuestion) {
+        assistantMessage = nluResult.followUpQuestion;
+      } else if (nluResult.missingFields.length > 0) {
+        assistantMessage = `Got it! Could you please provide the ${nluResult.missingFields[0]}?`;
+      } else if (['CONFIRM', 'PUBLISH_PRODUCT'].includes(nluResult.intent.name)) {
         assistantMessage = 'Product information is complete and validated!';
+      } else {
+        assistantMessage = 'Understood. Product draft updated.';
       }
 
       await repositories.sessions.appendMessage(id, { role: 'assistant', content: assistantMessage });
@@ -114,9 +118,14 @@ export class AudioController {
           nlu: {
             intent: nluResult.intent,
             detectedLanguage: nluResult.detectedLanguage,
+            isCorrection: nluResult.isCorrection,
             extractedEntities: nluResult.entities,
+            concepts: nluResult.concepts,
             missingFields: nluResult.missingFields,
             validation: nluResult.validation,
+            followUpQuestion: nluResult.followUpQuestion,
+            pipelineStatus: nluResult.pipelineStatus,
+            diagnostics: nluResult.diagnostics,
           },
           assistantMessage,
         },

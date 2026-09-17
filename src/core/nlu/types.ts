@@ -61,27 +61,28 @@ export interface LLMOutputShape {
 }
 
 export const llmOutputZodSchema = z.object({
-  intent: z.string().optional(),
-  confidence: z.number().min(0).max(1).optional(),
-  isCorrection: z.boolean().optional(),
-  isDontKnow: z.boolean().optional(),
-  language: z.string().optional(),
-  entities: z.record(z.string(), z.unknown()).optional(),
+  intent: z.string().nullable().optional(),
+  confidence: z.number().min(0).max(1).nullable().optional(),
+  isCorrection: z.boolean().nullable().optional(),
+  isDontKnow: z.boolean().nullable().optional(),
+  language: z.string().nullable().optional(),
+  entities: z.record(z.string(), z.unknown()).nullable().optional(),
   concepts: z
     .array(
       z.object({
-        name: z.string(),
-        value: z.string(),
-        type: z.string().optional(),
-        isKnown: z.boolean().optional(),
-        evidence: z.string().optional(),
-        confidence: z.number().optional(),
+        name: z.union([z.string(), z.number()]).transform((val) => String(val)),
+        value: z.union([z.string(), z.number()]).transform((val) => String(val)),
+        type: z.string().nullable().optional(),
+        isKnown: z.boolean().nullable().optional(),
+        evidence: z.string().nullable().optional(),
+        confidence: z.number().nullable().optional(),
       })
     )
+    .nullable()
     .optional(),
-  missingInformation: z.array(z.string()).optional(),
-  followUpQuestion: z.string().optional(),
-  estimationOffered: z.boolean().optional(),
+  missingInformation: z.array(z.string()).nullable().optional(),
+  followUpQuestion: z.string().nullable().optional(),
+  estimationOffered: z.boolean().nullable().optional(),
 });
 
 export interface ExtractedEntity {

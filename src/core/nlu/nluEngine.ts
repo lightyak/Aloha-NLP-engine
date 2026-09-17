@@ -83,9 +83,12 @@ export class NLUEngine {
           pipelineStatus = 'LLM_SUCCEEDED';
           llmSucceeded = true;
         } else {
-          logger.warn({ issues: validation.error.issues }, 'LLM output failed Zod schema validation');
+          logger.warn(
+            { issues: validation.error.issues },
+            'LLM output failed Zod schema validation - returning degraded NLU state'
+          );
           pipelineStatus = 'DETERMINISTIC_VALIDATION_FAILED';
-          llmResult = response.data;
+          llmSucceeded = false;
         }
       } else {
         pipelineStatus = 'LLM_RETURNED_EMPTY_RESULT';

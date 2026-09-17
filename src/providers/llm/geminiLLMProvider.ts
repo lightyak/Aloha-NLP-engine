@@ -16,7 +16,7 @@ export class GeminiLLMProvider implements ILLMProvider {
       throw new ConfigurationError('Gemini API key is required to initialize GeminiLLMProvider');
     }
     this.apiKey = config.apiKey;
-    this.model = config.model || 'gemini-1.5-flash';
+    this.model = config.model || 'gemini-2.5-pro';
   }
 
   private sanitizeErrorMessage(msg: string): string {
@@ -64,6 +64,11 @@ export class GeminiLLMProvider implements ILLMProvider {
         throw new ProviderError('Gemini', 'No generation candidates returned from Gemini API');
       }
 
+      // If the model ran out of tokens the JSON will be truncated and unparseable
+      if (candidate.finishReason === 'MAX_TOKENS') {
+        throw new ProviderError('Gemini', 'Response truncated (MAX_TOKENS): reduce prompt size or increase token limit');
+      }
+
       const rawText = candidate.content?.parts?.[0]?.text;
       if (!rawText) {
         throw new ProviderError('Gemini', 'Empty response received from model');
@@ -73,7 +78,6 @@ export class GeminiLLMProvider implements ILLMProvider {
       if (cleanText.startsWith('```')) {
         cleanText = cleanText.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
       }
-
       const parsed: T = JSON.parse(cleanText);
       return {
         data: parsed,
