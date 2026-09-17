@@ -66,7 +66,7 @@ export const llmOutputZodSchema = z.object({
   isCorrection: z.boolean().optional(),
   isDontKnow: z.boolean().optional(),
   language: z.string().optional(),
-  entities: z.record(z.unknown()).optional(),
+  entities: z.record(z.string(), z.unknown()).optional(),
   concepts: z
     .array(
       z.object({
