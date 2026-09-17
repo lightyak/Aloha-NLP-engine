@@ -66,8 +66,10 @@ export class SessionsController {
       });
 
       let assistantMessage: string;
-      if (nluResult.missingFields.length > 0) {
-        assistantMessage = `Got it! I still need: ${nluResult.missingFields.join(', ')}.`;
+      if (nluResult.followUpQuestion) {
+        assistantMessage = nluResult.followUpQuestion;
+      } else if (nluResult.missingFields.length > 0) {
+        assistantMessage = `Got it! Could you please provide the ${nluResult.missingFields[0]}?`;
       } else if (['CONFIRM', 'PUBLISH_PRODUCT'].includes(nluResult.intent.name)) {
         assistantMessage = 'Product information is complete and validated!';
       } else {
@@ -85,8 +87,10 @@ export class SessionsController {
             detectedLanguage: nluResult.detectedLanguage,
             isCorrection: nluResult.isCorrection,
             extractedEntities: nluResult.entities,
+            concepts: nluResult.concepts,
             missingFields: nluResult.missingFields,
             validation: nluResult.validation,
+            followUpQuestion: nluResult.followUpQuestion,
           },
           assistantMessage,
         },
