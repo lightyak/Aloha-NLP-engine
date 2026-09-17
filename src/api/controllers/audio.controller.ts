@@ -60,21 +60,30 @@ export class AudioController {
       await repositories.sessions.appendMessage(id, {
         role: 'user',
         content: transcription.text,
-        metadata: { source: 'audio', confidence: transcription.confidence, language: transcription.language },
+        metadata: {
+          source: 'audio',
+          // confidence only present when genuinely returned by provider
+          ...(transcription.confidence !== undefined ? { confidence: transcription.confidence } : {}),
+          // detectedLanguage: reported by STT; languageHint: caller-supplied
+          ...(transcription.detectedLanguage ? { detectedLanguage: transcription.detectedLanguage } : {}),
+          ...(transcription.languageHint ? { languageHint: transcription.languageHint } : {}),
+        },
       });
 
-      // 3. Run NLU on transcribed text
+      // 3. Run NLU on transcribed text — prefer STT-detected language, fall back to hint
+      const nluLanguageHint = transcription.detectedLanguage ?? transcription.languageHint;
       const nluResult = await defaultNLUEngine.process(transcription.text, {
         sessionId: id,
         currentDraft: session.productDraft,
-        languageHint: transcription.language,
+        languageHint: nluLanguageHint,
       });
 
       const updatedDraft = { ...session.productDraft, ...nluResult.entities };
 
       const updatedSession = await repositories.sessions.update(id, {
         currentIntent: nluResult.intent.name,
-        language: nluResult.detectedLanguage || transcription.language,
+        // Prefer NLU-detected language, then STT-detected, then hint
+        language: nluResult.detectedLanguage ?? transcription.detectedLanguage ?? transcription.languageHint,
         productDraft: updatedDraft,
         missingFields: nluResult.missingFields,
         status: nluResult.intent.name === 'PUBLISH_PRODUCT' ? 'completed' : 'active',
@@ -92,7 +101,15 @@ export class AudioController {
       res.json({
         success: true,
         data: {
-          transcription: { text: transcription.text, language: transcription.language, confidence: transcription.confidence },
+          transcription: {
+            text: transcription.text,
+            // detectedLanguage: only set when provider genuinely detected it
+            ...(transcription.detectedLanguage ? { detectedLanguage: transcription.detectedLanguage } : {}),
+            // languageHint: echoed from caller
+            ...(transcription.languageHint ? { languageHint: transcription.languageHint } : {}),
+            // confidence: only set when provider genuinely returned it
+            ...(transcription.confidence !== undefined ? { confidence: transcription.confidence } : {}),
+          },
           session: updatedSession,
           nlu: {
             intent: nluResult.intent,
