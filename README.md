@@ -73,8 +73,12 @@ Default `.env` configuration runs smoothly out-of-the-box using the built-in dev
 To use live LLM / STT providers:
 ```env
 LLM_PROVIDER=gemini
-GEMINI_API_KEY=your_gemini_api_key_here
+LLM_API_KEY=your_gemini_api_key_here
+LLM_MODEL=gemini-2.5-flash
+
 STT_PROVIDER=gemini
+STT_API_KEY=your_stt_api_key_here
+STT_MODEL=gemini-2.5-flash
 ```
 
 ### 4. Running the Application
